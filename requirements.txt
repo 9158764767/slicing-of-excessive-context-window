@@ -1,0 +1,6 @@
+
+nltk
+beautifulsoup4
+scikit-learn
+replicate
+bs4
