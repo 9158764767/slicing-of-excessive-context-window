@@ -1,4 +1,4 @@
-# slicing-of-excessive-context-window
+# Slicing-of-excessive-context-window
 ## Dynamic Text Processing and Interactive AI Dialogue Management.
 
 # Overview:
