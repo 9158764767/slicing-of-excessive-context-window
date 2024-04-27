@@ -21,6 +21,66 @@ Here’s an enhanced description of your methodology for managing text inputs re
  Methodology Overview:
 
 This pipeline is meticulously crafted to optimize interactions with large language models by adeptly managing text input sizes. It is critical for models such as GPT-3 and others with stringent input constraints.
+## Text Preprocessing
+The algorithm employs several natural language processing techniques to prepare the text for efficient processing and analysis:
+
+### Tokenization
+This process involves converting raw text into tokens (words), normalizing them by converting to lowercase, and ensuring that only alphanumeric tokens are kept. This simplifies the text and provides a clean set of words for further processing.
+
+```python
+# Preprocessing function
+def preprocess_text(text):
+    soup = BeautifulSoup(text, "html.parser")
+    text = soup.get_text(separator=" ")  # Remove HTML tags
+    text = re.sub(r"[^a-zA-Z\s]", "", text)  # Remove non-alphabetic characters
+    tokens = word_tokenize(text.lower())  # Tokenize and convert to lower case
+    tokens = [token for token in tokens if token.isalnum()]  # Alphanumeric filter
+```
+
+### Stopword Elimination
+Removes common words that are typically irrelevant in understanding the meaning of the text, allowing the model to focus on more significant words.
+
+```python
+    stop_words = set(stopwords.words('english'))
+    tokens = [token for token in tokens if token not in stop_words]  # Stopword removal
+```
+
+### Lemmatization
+Transforms words into their base or dictionary form, improving the model's ability to process variations of the same word.
+
+```python
+    lemmatizer = WordNetLemmatizer()
+    lemmatized = [lemmatizer.lemmatize(token) for token in tokens]  # Lemmatization
+    return " ".join(lemmatized)
+```
+
+### Cosine Similarity Based on TF-IDF Representation of Text Slices
+Uses TF-IDF to convert text slices into vectorized formats, enabling the use of cosine similarity to determine how distinct consecutive text slices are from each other.
+
+---
+
+## Cosine Similarity and Threshold Logic
+Cosine similarity quantifies the similarity between two vectors of an inner product space, used here to ensure distinctiveness between sequential text slices.
+
+### Cosine Similarity and Threshold Example
+Here is how cosine similarity is used to compare two adjacent text slices after they have been preprocessed and vectorized:
+
+```python
+# Context Window Slicing Algorithm
+def generate_slices(input_text, context_window_size=128):
+    ...
+    final_slices = [slices[0]]
+    vectorizer = TfidfVectorizer()
+    for i in range(1, len(slices)):
+        tfidf_matrix = vectorizer.fit_transform([final_slices[-1], slices[i]])
+        cosine_dist = cosine_similarity(tfidf_matrix[0], tfidf_matrix[1])[0][0]
+        if cosine_dist < 0.2:  # Threshold for differentiation
+            final_slices.append(slices[i])
+    return final_slices
+```
+
+In this example, the `TfidfVectorizer` transforms the text slices into numerical vectors. Cosine similarity is then calculated between consecutive slices. If the similarity is below a set threshold (0.2 in this case), the slices are considered sufficiently distinct, and the next slice is added to the final list of slices. This ensures that each slice provided to the LLM is unique enough to contribute valuable information to the overall context.
+
 
 #  Pipeline Description:
 1. Handling Inputs Below Context Window Limit
@@ -39,7 +99,7 @@ This pipeline is meticulously crafted to optimize interactions with large langua
      # Function to slice the input text for large inputs
      def generate_slices(input_text, context_window_size=128):
          context_window_bytes = context_window_size * 1024 * 1024
-         # Code to slice the text...
+         
      ```
 
   # Aggregate Size Management:
